@@ -117,7 +117,7 @@ export default function App() {
   return (
     <div className="app">
       <header className="header">
-        <h1 className="logo">Learning Integrity Checker</h1>
+        <h1 className="logo">CETLOE's Learning Integrity Checker</h1>
         <StepTracker currentStep={step} />
       </header>
 
