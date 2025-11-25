@@ -1,139 +1,178 @@
 import { useCallback, useRef, useState } from "react";
 
-const WS_URL = import.meta.env.VITE_WS_URL || "ws://localhost:8000/ws/transcribe";
-
 export function useSpeechRecognition() {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [error, setError] = useState("");
 
-  const wsRef = useRef(null);
-  const mediaStreamRef = useRef(null);
-  const audioContextRef = useRef(null);
-  const processorRef = useRef(null);
-  const sourceRef = useRef(null);
+  const recognitionRef = useRef(null);
+  const shouldListenRef = useRef(false);
+  const instanceIdRef = useRef(0);
+  
+  // This is the source of truth - all confirmed text
+  const confirmedTextRef = useRef("");
+  // Current interim text (not yet confirmed)
+  const interimTextRef = useRef("");
 
-  const start = useCallback(async () => {
-    setError("");
-    setTranscript("");
+  const getSpeechRecognition = () => {
+    return window.SpeechRecognition || window.webkitSpeechRecognition;
+  };
+
+  const updateDisplay = useCallback(() => {
+    const display = (confirmedTextRef.current + interimTextRef.current).trim();
+    setTranscript(display);
+  }, []);
+
+  const startRecognitionSession = useCallback((instanceId) => {
+    const SpeechRecognition = getSpeechRecognition();
+    if (!SpeechRecognition || !shouldListenRef.current) return;
+    if (instanceId !== instanceIdRef.current) return;
+
+    // Stop any existing
+    if (recognitionRef.current) {
+      try { recognitionRef.current.abort(); } catch (e) {}
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+    recognition.maxAlternatives = 1;
+
+    // Track what's been finalized in THIS session only
+    let thisSessionFinals = "";
+
+    recognition.onresult = (event) => {
+      if (instanceId !== instanceIdRef.current) return;
+
+      // Process only the latest results
+      let newFinals = "";
+      let currentInterim = "";
+
+      for (let i = 0; i < event.results.length; i++) {
+        const result = event.results[i];
+        if (result.isFinal) {
+          newFinals += result[0].transcript;
+        } else {
+          currentInterim += result[0].transcript;
+        }
+      }
+
+      // Update session finals if we got new ones
+      if (newFinals) {
+        thisSessionFinals = newFinals;
+      }
+
+      // Update interim
+      interimTextRef.current = currentInterim;
+
+      // Display = confirmed (from all prev sessions) + this session's finals + current interim
+      const display = (confirmedTextRef.current + thisSessionFinals + " " + currentInterim).trim();
+      setTranscript(display);
+    };
+
+    recognition.onend = () => {
+      if (instanceId !== instanceIdRef.current) return;
+
+      // IMPORTANT: Save this session's finals to confirmed text BEFORE restarting
+      if (thisSessionFinals.trim()) {
+        confirmedTextRef.current += thisSessionFinals + " ";
+      }
+      // Clear interim since session ended
+      interimTextRef.current = "";
+
+      // Restart if we should still be listening
+      if (shouldListenRef.current && instanceId === instanceIdRef.current) {
+        // Use setTimeout to avoid "already started" errors
+        setTimeout(() => {
+          if (shouldListenRef.current && instanceId === instanceIdRef.current) {
+            startRecognitionSession(instanceId);
+          }
+        }, 100);
+      }
+    };
+
+    recognition.onerror = (event) => {
+      console.log("Speech error:", event.error);
+      // Let onend handle the restart
+    };
+
+    recognitionRef.current = recognition;
 
     try {
-      // Get microphone access
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          channelCount: 1,
-          sampleRate: 16000,
-          echoCancellation: true,
-          noiseSuppression: true,
-        },
-      });
-      mediaStreamRef.current = stream;
-
-      // Create AudioContext
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)({
-        sampleRate: 16000,
-      });
-      audioContextRef.current = audioContext;
-
-      // Connect WebSocket to backend
-      const ws = new WebSocket(WS_URL);
-      wsRef.current = ws;
-
-      ws.onopen = () => {
-        console.log("WebSocket connected to Vosk");
-        setIsListening(true);
-
-        // Create audio processing pipeline
-        const source = audioContext.createMediaStreamSource(stream);
-        sourceRef.current = source;
-
-        // Use ScriptProcessor for audio processing (worklet would be better but more complex)
-        const processor = audioContext.createScriptProcessor(4096, 1, 1);
-        processorRef.current = processor;
-
-        processor.onaudioprocess = (e) => {
-          if (ws.readyState === WebSocket.OPEN) {
-            const inputData = e.inputBuffer.getChannelData(0);
-            // Convert float32 to int16
-            const int16Data = new Int16Array(inputData.length);
-            for (let i = 0; i < inputData.length; i++) {
-              const s = Math.max(-1, Math.min(1, inputData[i]));
-              int16Data[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
-            }
-            ws.send(int16Data.buffer);
-          }
-        };
-
-        source.connect(processor);
-        processor.connect(audioContext.destination);
-      };
-
-      ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          if (data.full_transcript) {
-            setTranscript(data.full_transcript);
-          }
-        } catch (e) {
-          console.error("Failed to parse WebSocket message:", e);
+      recognition.start();
+    } catch (e) {
+      // Try again after a short delay
+      setTimeout(() => {
+        if (shouldListenRef.current && instanceId === instanceIdRef.current) {
+          try { recognition.start(); } catch (e2) {}
         }
-      };
-
-      ws.onerror = (event) => {
-        console.error("WebSocket error:", event);
-        setError("Connection error. Make sure the backend is running.");
-      };
-
-      ws.onclose = () => {
-        console.log("WebSocket closed");
-      };
-
-    } catch (err) {
-      console.error("Failed to start recording:", err);
-      if (err.name === "NotAllowedError") {
-        setError("Microphone access denied. Please allow microphone access.");
-      } else {
-        setError(`Failed to start: ${err.message}`);
-      }
+      }, 150);
     }
   }, []);
 
+  const start = useCallback(() => {
+    const SpeechRecognition = getSpeechRecognition();
+    if (!SpeechRecognition) {
+      setError("Speech recognition not supported. Please use Chrome or Edge.");
+      return;
+    }
+
+    // Stop any existing
+    if (recognitionRef.current) {
+      try { recognitionRef.current.abort(); } catch (e) {}
+      recognitionRef.current = null;
+    }
+
+    // Reset all state
+    setError("");
+    setTranscript("");
+    confirmedTextRef.current = "";
+    interimTextRef.current = "";
+    shouldListenRef.current = true;
+    instanceIdRef.current++;
+    setIsListening(true);
+
+    // Start new session
+    startRecognitionSession(instanceIdRef.current);
+  }, [startRecognitionSession]);
+
   const stop = useCallback(() => {
-    // Close WebSocket
-    if (wsRef.current) {
-      wsRef.current.close();
-      wsRef.current = null;
-    }
-
-    // Disconnect audio processor
-    if (processorRef.current) {
-      processorRef.current.disconnect();
-      processorRef.current = null;
-    }
-
-    if (sourceRef.current) {
-      sourceRef.current.disconnect();
-      sourceRef.current = null;
-    }
-
-    // Close audio context
-    if (audioContextRef.current) {
-      audioContextRef.current.close();
-      audioContextRef.current = null;
-    }
-
-    // Stop media stream
-    if (mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach((track) => track.stop());
-      mediaStreamRef.current = null;
-    }
-
+    shouldListenRef.current = false;
+    instanceIdRef.current++;
     setIsListening(false);
+
+    if (recognitionRef.current) {
+      try { recognitionRef.current.abort(); } catch (e) {}
+      recognitionRef.current = null;
+    }
   }, []);
 
   const reset = useCallback(() => {
+    // Stop everything
+    shouldListenRef.current = false;
+    instanceIdRef.current++;
+    
+    if (recognitionRef.current) {
+      try { recognitionRef.current.abort(); } catch (e) {}
+      recognitionRef.current = null;
+    }
+
+    // Clear all text
     setTranscript("");
-  }, []);
+    confirmedTextRef.current = "";
+    interimTextRef.current = "";
+
+    // Start fresh after browser has time to clean up
+    const newInstanceId = instanceIdRef.current;
+    setTimeout(() => {
+      if (newInstanceId === instanceIdRef.current) {
+        shouldListenRef.current = true;
+        setIsListening(true);
+        startRecognitionSession(newInstanceId);
+      }
+    }, 200);
+  }, [startRecognitionSession]);
 
   return { isListening, transcript, error, start, stop, reset };
 }

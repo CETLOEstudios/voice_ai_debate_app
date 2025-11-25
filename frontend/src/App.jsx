@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import { useSpeechRecognition } from "./hooks/useSpeechRecognition";
 import { useAudioPlayer } from "./hooks/useAudioPlayer";
 import { uploadAssignment, submitAnswer } from "./api";
@@ -8,9 +8,11 @@ import { ReadyPanel } from "./components/ReadyPanel";
 import { InterviewPanel } from "./components/InterviewPanel";
 import { ResultsPanel } from "./components/ResultsPanel";
 import { ConversationPanel } from "./components/ConversationPanel";
+import { ElevenLabsPanel } from "./components/ElevenLabsPanel";
 
 export default function App() {
   const [step, setStep] = useState("upload");
+  const [selectedModel, setSelectedModel] = useState("gemini");
   const [sessionId, setSessionId] = useState(null);
   const [uploadStatus, setUploadStatus] = useState("idle");
   const [uploadError, setUploadError] = useState("");
@@ -21,9 +23,16 @@ export default function App() {
   const [pendingAudio, setPendingAudio] = useState(null);
   const [pendingGreeting, setPendingGreeting] = useState(null);
   const [fileName, setFileName] = useState("");
+  const [currentQuestion, setCurrentQuestion] = useState("");
+  const [currentQuestionAudio, setCurrentQuestionAudio] = useState("");
+  const [assignmentText, setAssignmentText] = useState("");
 
   const speech = useSpeechRecognition();
   const audio = useAudioPlayer();
+
+  const handleModelChange = useCallback((model) => {
+    setSelectedModel(model);
+  }, []);
 
   const handleFileUpload = useCallback(async (file) => {
     if (!file) return;
@@ -34,29 +43,44 @@ export default function App() {
     try {
       const data = await uploadAssignment(file);
       setSessionId(data.session_id);
-      setQuestionNumber(data.question_number || 1);
-      setPendingAudio(data.audio_base64);
-      setPendingGreeting(data.text);
+      setAssignmentText(data.assignment_text || "");
+      
+      if (selectedModel === "gemini") {
+        setQuestionNumber(data.question_number || 1);
+        setPendingAudio(data.audio_base64);
+        setPendingGreeting(data.text);
+        setCurrentQuestion(data.text);
+        setCurrentQuestionAudio(data.audio_base64);
+      }
+      
       setStep("ready");
       setUploadStatus("success");
     } catch (error) {
       setUploadError(error.message || "Failed to upload file");
       setUploadStatus("failed");
     }
-  }, []);
+  }, [selectedModel]);
 
   const startConversation = useCallback(async () => {
+    if (selectedModel === "elevenlabs") {
+      setStep("interview");
+      return;
+    }
+
+    // Gemini flow
     if (pendingGreeting) {
       setConversation([{ role: "ai", text: pendingGreeting }]);
       setPendingGreeting(null);
     }
     setStep("interview");
+    
     if (pendingAudio) {
       await audio.play(pendingAudio);
       setPendingAudio(null);
     }
+    
     speech.start();
-  }, [pendingAudio, pendingGreeting, audio, speech]);
+  }, [selectedModel, pendingAudio, pendingGreeting, audio, speech]);
 
   const handleSubmitAnswer = useCallback(async (answerText) => {
     if (!sessionId || !answerText.trim()) return;
@@ -64,7 +88,6 @@ export default function App() {
     speech.stop();
     setIsProcessing(true);
     setConversation((prev) => [...prev, { role: "student", text: answerText }]);
-    speech.reset();
 
     try {
       const data = await submitAnswer(sessionId, answerText);
@@ -81,11 +104,15 @@ export default function App() {
         await audio.play(data.audio_base64);
       } else {
         setQuestionNumber(data.question_number || questionNumber + 1);
+        setCurrentQuestion(data.text);
+        setCurrentQuestionAudio(data.audio_base64);
+        
         await audio.play(data.audio_base64);
         speech.start();
       }
     } catch (error) {
       setConversation((prev) => [...prev, { role: "ai", text: `Error: ${error.message}` }]);
+      speech.start();
     } finally {
       setIsProcessing(false);
     }
@@ -97,10 +124,36 @@ export default function App() {
     }
   }, [speech.transcript, handleSubmitAnswer]);
 
+  const handleRepeatQuestion = useCallback(async () => {
+    if (currentQuestionAudio) {
+      speech.stop();
+      await audio.play(currentQuestionAudio);
+      speech.start();
+    }
+  }, [currentQuestionAudio, audio, speech]);
+
+  const handleRetryAnswer = useCallback(() => {
+    speech.reset();
+  }, [speech]);
+
+  const handleElevenLabsComplete = useCallback((result) => {
+    // ElevenLabs conversation completed
+    if (result) {
+      setAnalysis({
+        finalScore: result.score || 75,
+        review: result.review || "Conversation completed.",
+        observations: result.observations || [],
+        confidenceTag: result.score >= 85 ? "Likely original" : result.score >= 65 ? "Probably student-made" : "Needs verification",
+      });
+    }
+    setStep("results");
+  }, []);
+
   const handleRestart = useCallback(() => {
     speech.stop();
     audio.stop();
     setStep("upload");
+    setSelectedModel("gemini");
     setSessionId(null);
     setUploadStatus("idle");
     setUploadError("");
@@ -110,9 +163,14 @@ export default function App() {
     setPendingAudio(null);
     setPendingGreeting(null);
     setFileName("");
+    setCurrentQuestion("");
+    setCurrentQuestionAudio("");
+    setAssignmentText("");
   }, [speech, audio]);
 
   const showConversation = step === "interview" || step === "results";
+  const showTranscript = step === "interview" && speech.isListening && !audio.isSpeaking;
+  const isGemini = selectedModel === "gemini";
 
   return (
     <div className="app">
@@ -128,22 +186,40 @@ export default function App() {
               onFileSelected={handleFileUpload}
               status={uploadStatus}
               error={uploadError}
+              selectedModel={selectedModel}
+              onModelChange={handleModelChange}
             />
           )}
 
           {step === "ready" && (
-            <ReadyPanel fileName={fileName} onStart={startConversation} />
+            <ReadyPanel 
+              fileName={fileName} 
+              onStart={startConversation}
+              modelName={selectedModel === "gemini" ? "Gemini AI" : "ElevenLabs"}
+            />
           )}
 
-          {step === "interview" && (
+          {step === "interview" && isGemini && (
             <InterviewPanel
               questionNumber={questionNumber}
+              currentQuestion={currentQuestion}
               transcript={speech.transcript}
-              isListening={speech.isListening}
+              isListening={speech.isListening && !audio.isSpeaking}
               isSpeaking={audio.isSpeaking}
               isProcessing={isProcessing}
               micError={speech.error}
               onFinishAnswer={handleFinishAnswer}
+              onRepeatQuestion={handleRepeatQuestion}
+              onRetryAnswer={handleRetryAnswer}
+            />
+          )}
+
+          {step === "interview" && !isGemini && (
+            <ElevenLabsPanel
+              assignmentText={assignmentText}
+              fileName={fileName}
+              onComplete={handleElevenLabsComplete}
+              onRestart={handleRestart}
             />
           )}
 
@@ -151,12 +227,12 @@ export default function App() {
             <ResultsPanel analysis={analysis} onRestart={handleRestart} />
           )}
 
-          {showConversation && (
+          {showConversation && isGemini && (
             <ConversationPanel
               messages={conversation}
-              currentTranscript={step === "interview" && speech.isListening ? speech.transcript : ""}
+              currentTranscript={showTranscript ? speech.transcript : ""}
               isSpeaking={audio.isSpeaking}
-              isListening={speech.isListening}
+              isListening={speech.isListening && !audio.isSpeaking}
               isProcessing={isProcessing}
               analysis={analysis}
             />

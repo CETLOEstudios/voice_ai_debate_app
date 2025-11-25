@@ -1,6 +1,5 @@
 import uuid
-import json
-from fastapi import FastAPI, UploadFile, File, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
@@ -8,7 +7,6 @@ from typing import Optional
 from file_parser import parse_file
 from gemini_service import GeminiService
 from tts_service import text_to_speech_base64
-from vosk_service import VoskTranscriber, get_model
 
 app = FastAPI(title="Assignment Authenticity Checker API")
 
@@ -37,46 +35,7 @@ class SessionResponse(BaseModel):
     question_number: Optional[int] = None
     score: Optional[int] = None
     observations: Optional[list] = None
-
-
-@app.on_event("startup")
-async def startup_event():
-    """Pre-load Vosk model on startup."""
-    print("Loading Vosk speech recognition model...")
-    get_model()
-    print("Vosk model loaded!")
-
-
-@app.websocket("/ws/transcribe")
-async def websocket_transcribe(websocket: WebSocket):
-    """
-    WebSocket endpoint for real-time speech transcription.
-    
-    Client sends: raw audio bytes (16-bit PCM, 16kHz, mono)
-    Server sends: JSON with transcription updates
-    """
-    await websocket.accept()
-    transcriber = VoskTranscriber(sample_rate=16000)
-    
-    try:
-        while True:
-            # Receive audio data
-            data = await websocket.receive_bytes()
-            
-            # Process audio and get transcription
-            result = transcriber.process_audio(data)
-            
-            # Send transcription update to client
-            await websocket.send_json(result)
-            
-    except WebSocketDisconnect:
-        # Client disconnected, get final result
-        final_text = transcriber.get_final_result()
-        print(f"Transcription session ended. Final: {final_text}")
-    except Exception as e:
-        print(f"WebSocket error: {e}")
-    finally:
-        pass
+    assignment_text: Optional[str] = None
 
 
 @app.post("/api/upload", response_model=SessionResponse)
@@ -137,6 +96,7 @@ async def upload_assignment(file: UploadFile = File(...)):
         text=question_text,
         audio_base64=audio_base64,
         question_number=1,
+        assignment_text=assignment_text[:3000],  # Send first 3000 chars for ElevenLabs context
     )
 
 
@@ -208,3 +168,4 @@ async def get_transcript(session_id: str):
 @app.get("/api/health")
 async def health_check():
     return {"status": "ok"}
+

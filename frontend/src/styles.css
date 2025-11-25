@@ -172,6 +172,81 @@ body {
   margin-top: 12px;
 }
 
+/* Model Selector */
+.model-selector {
+  margin-bottom: 24px;
+}
+
+.model-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--gray-700);
+  margin-bottom: 12px;
+}
+
+.model-options {
+  display: flex;
+  gap: 12px;
+}
+
+.model-option {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 16px;
+  border: 2px solid var(--gray-200);
+  border-radius: 12px;
+  background: var(--white);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.model-option:hover:not(:disabled) {
+  border-color: var(--gray-400);
+  background: var(--gray-50);
+}
+
+.model-option.selected {
+  border-color: var(--gray-900);
+  background: var(--gray-50);
+}
+
+.model-option:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.model-name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--gray-900);
+}
+
+.model-desc {
+  font-size: 0.75rem;
+  color: var(--gray-500);
+}
+
+.divider {
+  height: 1px;
+  background: var(--gray-200);
+  margin: 24px 0;
+}
+
+.model-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: var(--gray-900);
+  color: var(--white);
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
 /* Buttons */
 .btn {
   display: inline-flex;
@@ -353,6 +428,89 @@ body {
   font-size: 1rem;
   color: var(--gray-700);
   line-height: 1.6;
+}
+
+/* Current Question Display */
+.current-question {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: var(--gray-100);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.question-text {
+  flex: 1;
+  font-size: 0.9375rem;
+  color: var(--gray-800);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--gray-300);
+  background: var(--white);
+  color: var(--gray-600);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.btn-icon:hover:not(:disabled) {
+  background: var(--gray-50);
+  border-color: var(--gray-400);
+  color: var(--gray-900);
+}
+
+.btn-icon:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.repeat-btn:hover:not(:disabled) {
+  background: #dbeafe;
+  border-color: #3b82f6;
+  color: #1d4ed8;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.btn-retry {
+  width: 100%;
+  padding: 12px;
+  background: var(--white);
+  color: var(--gray-700);
+  border: 1px solid var(--gray-300);
+  font-size: 0.9375rem;
+}
+
+.btn-retry:hover:not(:disabled) {
+  background: var(--gray-50);
+  border-color: var(--gray-400);
+}
+
+.btn-retry:disabled {
+  background: var(--gray-100);
+  color: var(--gray-400);
+  border-color: var(--gray-200);
+  cursor: not-allowed;
+}
+
+.btn-retry svg {
+  width: 16px;
+  height: 16px;
 }
 
 /* Results Card */
@@ -540,6 +698,288 @@ body {
   margin-top: 12px;
 }
 
+/* ElevenLabs Custom Panel */
+.elevenlabs-custom-card {
+  grid-column: 1 / -1;
+  max-width: 800px;
+  justify-self: center;
+  background: linear-gradient(180deg, #0a0a0f 0%, #12121a 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.elevenlabs-custom-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.elevenlabs-custom-header h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.question-counter {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.6);
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 100px;
+}
+
+.elevenlabs-orb-section {
+  display: flex;
+  justify-content: center;
+  padding: 32px 0;
+  cursor: pointer;
+}
+
+.elevenlabs-error-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.elevenlabs-error-banner p {
+  color: #fca5a5;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.btn-small {
+  padding: 6px 12px;
+  font-size: 0.75rem;
+}
+
+.elevenlabs-transcript-section {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.transcript-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.transcript-header h3 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.live-indicator {
+  font-size: 0.75rem;
+  color: #22c55e;
+  animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.transcript-feed {
+  max-height: 250px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.transcript-placeholder {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.875rem;
+  padding: 32px 0;
+}
+
+.transcript-message {
+  padding: 12px 14px;
+  border-radius: 10px;
+  max-width: 85%;
+}
+
+.transcript-message .message-role {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+  opacity: 0.6;
+}
+
+.transcript-message p {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.transcript-message.ai {
+  align-self: flex-start;
+  background: rgba(59, 130, 246, 0.2);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.transcript-message.user {
+  align-self: flex-end;
+  background: rgba(34, 197, 94, 0.2);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.transcript-message.user.live {
+  background: rgba(34, 197, 94, 0.1);
+  border-style: dashed;
+}
+
+.transcript-message.system {
+  align-self: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.elevenlabs-custom-card .elevenlabs-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.elevenlabs-custom-card .btn-secondary {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.elevenlabs-custom-card .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.elevenlabs-custom-card .btn-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border: none;
+}
+
+.elevenlabs-custom-card .btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+}
+
+.elevenlabs-custom-card .btn-primary:disabled {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.elevenlabs-info {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.elevenlabs-info h3 {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 12px;
+}
+
+.elevenlabs-info ol {
+  margin: 0;
+  padding-left: 20px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.875rem;
+  line-height: 1.8;
+}
+
+.elevenlabs-active-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 32px 0;
+}
+
+.active-hint {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.9rem;
+  max-width: 300px;
+}
+
+.live-badge {
+  color: #22c55e;
+  font-size: 0.875rem;
+  font-weight: 500;
+  animation: blink 1.5s infinite;
+}
+
+.orb-hint {
+  margin-top: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+@keyframes blink {
+  0%, 50%, 100% { opacity: 1; }
+  25%, 75% { opacity: 0.5; }
+}
+
+/* Legacy ElevenLabs styles (keep for fallback) */
+.elevenlabs-card {
+  grid-column: 1 / -1;
+  max-width: 600px;
+  justify-self: center;
+}
+
+.elevenlabs-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.elevenlabs-header h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.elevenlabs-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--gray-200);
+  border-top-color: var(--gray-900);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 /* Responsive */
 @media (min-width: 768px) {
   .container {
@@ -548,9 +988,10 @@ body {
 
   .upload-card,
   .ready-card,
-  .results-card {
+  .results-card,
+  .elevenlabs-card {
     grid-column: 1 / -1;
-    max-width: 480px;
+    max-width: 560px;
     justify-self: center;
   }
 

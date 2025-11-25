@@ -1,17 +1,22 @@
 import React from "react";
-import { CheckIcon } from "./Icons";
+import { CheckIcon, SpeakerIcon, RetryIcon } from "./Icons";
 
 export function InterviewPanel({
   questionNumber,
+  currentQuestion,
   transcript,
   isListening,
   isSpeaking,
   isProcessing,
   micError,
   onFinishAnswer,
+  onRepeatQuestion,
+  onRetryAnswer,
 }) {
   const hasAnswer = transcript.trim().length > 0;
   const canFinish = hasAnswer && isListening && !isSpeaking && !isProcessing;
+  const canRepeat = !isSpeaking && !isProcessing;
+  const canRetry = hasAnswer && isListening && !isSpeaking && !isProcessing;
 
   return (
     <div className="card interview-card">
@@ -22,6 +27,21 @@ export function InterviewPanel({
         {isProcessing && <span className="status-badge processing">Processing</span>}
       </div>
 
+      {currentQuestion && (
+        <div className="current-question">
+          <p className="question-text">{currentQuestion}</p>
+          <button
+            type="button"
+            className="btn-icon repeat-btn"
+            onClick={onRepeatQuestion}
+            disabled={!canRepeat}
+            title="Repeat question"
+          >
+            <SpeakerIcon size={18} />
+          </button>
+        </div>
+      )}
+
       <div className="transcript-area">
         <p className="transcript-label">Your answer</p>
         <div className="transcript-content">
@@ -29,15 +49,27 @@ export function InterviewPanel({
         </div>
       </div>
 
-      <button
-        type="button"
-        className="btn btn-finish"
-        onClick={onFinishAnswer}
-        disabled={!canFinish}
-      >
-        <CheckIcon />
-        Done
-      </button>
+      <div className="action-buttons">
+        <button
+          type="button"
+          className="btn btn-finish"
+          onClick={onFinishAnswer}
+          disabled={!canFinish}
+        >
+          <CheckIcon />
+          Done
+        </button>
+
+        <button
+          type="button"
+          className="btn btn-retry"
+          onClick={onRetryAnswer}
+          disabled={!canRetry}
+        >
+          <RetryIcon />
+          Retry Answer
+        </button>
+      </div>
 
       {micError && <p className="error">{micError}</p>}
     </div>

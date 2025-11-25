@@ -3,7 +3,12 @@ import { UploadIcon } from "./Icons";
 
 const ACCEPTED_INPUTS = ".pdf,.docx,.pptx,.txt";
 
-export function UploadPanel({ onFileSelected, status, error }) {
+const AI_MODELS = [
+  { id: "gemini", name: "Gemini AI", description: "Google's Gemini with text-to-speech" },
+  { id: "elevenlabs", name: "ElevenLabs", description: "Conversational AI with natural voice" },
+];
+
+export function UploadPanel({ onFileSelected, status, error, selectedModel, onModelChange }) {
   const inputRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -15,6 +20,28 @@ export function UploadPanel({ onFileSelected, status, error }) {
 
   return (
     <div className="card upload-card">
+      {/* Model Selector */}
+      <div className="model-selector">
+        <p className="model-label">Select AI Model</p>
+        <div className="model-options">
+          {AI_MODELS.map((model) => (
+            <button
+              key={model.id}
+              type="button"
+              className={`model-option ${selectedModel === model.id ? "selected" : ""}`}
+              onClick={() => onModelChange(model.id)}
+              disabled={disabled}
+            >
+              <span className="model-name">{model.name}</span>
+              <span className="model-desc">{model.description}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="divider" />
+
+      {/* File Upload */}
       <div
         className={`dropzone ${isDragging ? "dragging" : ""}`}
         onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
@@ -54,4 +81,3 @@ export function UploadPanel({ onFileSelected, status, error }) {
     </div>
   );
 }
-
