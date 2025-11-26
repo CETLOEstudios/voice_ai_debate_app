@@ -25,6 +25,7 @@ export default function App() {
   const [currentQuestion, setCurrentQuestion] = useState("");
   const [currentQuestionAudio, setCurrentQuestionAudio] = useState("");
   const [assignmentText, setAssignmentText] = useState("");
+  const [elevenlabsAgentId, setElevenlabsAgentId] = useState("");
 
   const speech = useSpeechRecognition();
   const audio = useAudioPlayer();
@@ -43,6 +44,11 @@ export default function App() {
       const data = await uploadAssignment(file);
       setSessionId(data.session_id);
       setAssignmentText(data.assignment_text || "");
+      
+      // Store ElevenLabs agent ID from backend
+      if (data.elevenlabs_agent_id) {
+        setElevenlabsAgentId(data.elevenlabs_agent_id);
+      }
       
       if (selectedModel === "gemini") {
         setQuestionNumber(data.question_number || 1);
@@ -165,6 +171,7 @@ export default function App() {
     setCurrentQuestion("");
     setCurrentQuestionAudio("");
     setAssignmentText("");
+    setElevenlabsAgentId("");
   }, [speech, audio]);
 
   const isGemini = selectedModel === "gemini";
@@ -217,6 +224,7 @@ export default function App() {
             <ElevenLabsPanel
               assignmentText={assignmentText}
               fileName={fileName}
+              agentId={elevenlabsAgentId}
               onComplete={handleElevenLabsComplete}
               onRestart={handleRestart}
             />

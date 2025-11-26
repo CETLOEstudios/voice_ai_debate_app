@@ -7,6 +7,7 @@ from typing import Optional
 from file_parser import parse_file
 from gemini_service import GeminiService
 from tts_service import text_to_speech_base64
+from config import get_settings
 
 app = FastAPI(title="Assignment Authenticity Checker API")
 
@@ -36,6 +37,7 @@ class SessionResponse(BaseModel):
     score: Optional[int] = None
     observations: Optional[list] = None
     assignment_text: Optional[str] = None
+    elevenlabs_agent_id: Optional[str] = None
 
 
 @app.post("/api/upload", response_model=SessionResponse)
@@ -90,6 +92,9 @@ async def upload_assignment(file: UploadFile = File(...)):
         "question_number": 1,
     }
 
+    # Get ElevenLabs agent ID from settings
+    settings = get_settings()
+    
     return SessionResponse(
         session_id=session_id,
         message_type="question",
@@ -97,6 +102,7 @@ async def upload_assignment(file: UploadFile = File(...)):
         audio_base64=audio_base64,
         question_number=1,
         assignment_text=assignment_text[:3000],  # Send first 3000 chars for ElevenLabs context
+        elevenlabs_agent_id=settings.elevenlabs_agent_id or None,
     )
 
 
