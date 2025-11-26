@@ -5,9 +5,8 @@ import { uploadAssignment, submitAnswer } from "./api";
 import { StepTracker } from "./components/StepTracker";
 import { UploadPanel } from "./components/UploadPanel";
 import { ReadyPanel } from "./components/ReadyPanel";
-import { InterviewPanel } from "./components/InterviewPanel";
+import { GeminiPanel } from "./components/GeminiPanel";
 import { ResultsPanel } from "./components/ResultsPanel";
-import { ConversationPanel } from "./components/ConversationPanel";
 import { ElevenLabsPanel } from "./components/ElevenLabsPanel";
 
 export default function App() {
@@ -137,7 +136,6 @@ export default function App() {
   }, [speech]);
 
   const handleElevenLabsComplete = useCallback((result) => {
-    // ElevenLabs conversation completed
     console.log("ElevenLabs complete result:", result);
     const score = result?.score || 75;
     
@@ -169,8 +167,6 @@ export default function App() {
     setAssignmentText("");
   }, [speech, audio]);
 
-  const showConversation = step === "interview" || step === "results";
-  const showTranscript = step === "interview" && speech.isListening && !audio.isSpeaking;
   const isGemini = selectedModel === "gemini";
 
   return (
@@ -201,7 +197,7 @@ export default function App() {
           )}
 
           {step === "interview" && isGemini && (
-            <InterviewPanel
+            <GeminiPanel
               questionNumber={questionNumber}
               currentQuestion={currentQuestion}
               transcript={speech.transcript}
@@ -209,9 +205,11 @@ export default function App() {
               isSpeaking={audio.isSpeaking}
               isProcessing={isProcessing}
               micError={speech.error}
+              conversation={conversation}
               onFinishAnswer={handleFinishAnswer}
               onRepeatQuestion={handleRepeatQuestion}
               onRetryAnswer={handleRetryAnswer}
+              onCancel={handleRestart}
             />
           )}
 
@@ -226,17 +224,6 @@ export default function App() {
 
           {step === "results" && analysis && (
             <ResultsPanel analysis={analysis} onRestart={handleRestart} />
-          )}
-
-          {showConversation && isGemini && (
-            <ConversationPanel
-              messages={conversation}
-              currentTranscript={showTranscript ? speech.transcript : ""}
-              isSpeaking={audio.isSpeaking}
-              isListening={speech.isListening && !audio.isSpeaking}
-              isProcessing={isProcessing}
-              analysis={analysis}
-            />
           )}
         </div>
       </main>

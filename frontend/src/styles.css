@@ -701,11 +701,10 @@ body {
 /* ElevenLabs Custom Panel */
 .elevenlabs-custom-card {
   grid-column: 1 / -1;
-  max-width: 800px;
+  max-width: 600px;
   justify-self: center;
-  background: linear-gradient(180deg, #0a0a0f 0%, #12121a 100%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
 }
 
 .elevenlabs-custom-header {
@@ -718,19 +717,21 @@ body {
 .elevenlabs-custom-header h2 {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #fff;
+  color: var(--gray-900);
 }
 
 .question-counter {
   font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--gray-600);
   padding: 6px 12px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--gray-100);
   border-radius: 100px;
 }
 
 .elevenlabs-orb-section {
   display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
   padding: 32px 0;
   cursor: pointer;
@@ -742,14 +743,14 @@ body {
   justify-content: space-between;
   gap: 16px;
   padding: 12px 16px;
-  background: rgba(239, 68, 68, 0.15);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: #fef2f2;
+  border: 1px solid #fecaca;
   border-radius: 8px;
   margin-bottom: 20px;
 }
 
 .elevenlabs-error-banner p {
-  color: #fca5a5;
+  color: #dc2626;
   font-size: 0.875rem;
   margin: 0;
 }
@@ -760,8 +761,8 @@ body {
 }
 
 .elevenlabs-transcript-section {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
   border-radius: 12px;
   padding: 16px;
   margin-bottom: 24px;
@@ -773,18 +774,18 @@ body {
   align-items: center;
   margin-bottom: 12px;
   padding-bottom: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--gray-200);
 }
 
 .transcript-header h3 {
   font-size: 0.875rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--gray-700);
 }
 
 .live-indicator {
   font-size: 0.75rem;
-  color: #22c55e;
+  color: var(--success);
   animation: blink 1.5s infinite;
 }
 
@@ -803,7 +804,7 @@ body {
 
 .transcript-placeholder {
   text-align: center;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--gray-400);
   font-size: 0.875rem;
   padding: 32px 0;
 }
@@ -821,39 +822,43 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: 4px;
-  opacity: 0.6;
+  opacity: 0.7;
 }
 
 .transcript-message p {
   margin: 0;
   font-size: 0.9375rem;
   line-height: 1.5;
+  color: var(--gray-800);
 }
 
 .transcript-message.ai {
   align-self: flex-start;
-  background: rgba(59, 130, 246, 0.2);
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  background: #dbeafe;
+  border: 1px solid #93c5fd;
 }
 
 .transcript-message.user {
   align-self: flex-end;
-  background: rgba(34, 197, 94, 0.2);
-  border: 1px solid rgba(34, 197, 94, 0.3);
+  background: #dcfce7;
+  border: 1px solid #86efac;
 }
 
 .transcript-message.user.live {
-  background: rgba(34, 197, 94, 0.1);
+  background: #f0fdf4;
   border-style: dashed;
 }
 
 .transcript-message.system {
   align-self: center;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--gray-100);
+  border: 1px solid var(--gray-200);
   text-align: center;
   font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.6);
+}
+
+.transcript-message.system p {
+  color: var(--gray-500);
 }
 
 .elevenlabs-custom-card .elevenlabs-actions {
@@ -862,120 +867,146 @@ body {
   justify-content: center;
 }
 
-.elevenlabs-custom-card .btn-secondary {
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.elevenlabs-custom-card .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-.elevenlabs-custom-card .btn-primary {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  border: none;
-}
-
-.elevenlabs-custom-card .btn-primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
-}
-
-.elevenlabs-custom-card .btn-primary:disabled {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.3);
-}
-
-.elevenlabs-info {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 24px;
-}
-
-.elevenlabs-info h3 {
-  font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.8);
-  margin-bottom: 12px;
-}
-
-.elevenlabs-info ol {
-  margin: 0;
-  padding-left: 20px;
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 0.875rem;
-  line-height: 1.8;
-}
-
-.elevenlabs-active-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-  padding: 32px 0;
-}
-
-.active-hint {
-  text-align: center;
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 0.9rem;
-  max-width: 300px;
-}
-
 .live-badge {
-  color: #22c55e;
+  color: var(--success);
   font-size: 0.875rem;
   font-weight: 500;
   animation: blink 1.5s infinite;
 }
 
 .complete-badge {
-  color: #22c55e;
+  color: var(--success);
   font-size: 0.875rem;
   font-weight: 600;
 }
 
-.orb-hint.success {
-  color: #22c55e;
-  font-weight: 500;
-}
-
 .orb-hint {
   margin-top: 12px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--gray-500);
   font-size: 0.85rem;
   text-align: center;
 }
 
-@keyframes blink {
-  0%, 50%, 100% { opacity: 1; }
-  25%, 75% { opacity: 0.5; }
+.orb-hint.success {
+  color: var(--success);
+  font-weight: 500;
 }
 
-/* Legacy ElevenLabs styles (keep for fallback) */
-.elevenlabs-card {
-  grid-column: 1 / -1;
-  max-width: 600px;
-  justify-self: center;
+/* Listening indicator animation */
+.transcript-message.listening-indicator {
+  align-self: flex-end;
+  background: #f0fdf4;
+  border: 1px dashed #86efac;
 }
 
-.elevenlabs-header {
-  text-align: center;
-  margin-bottom: 24px;
-}
-
-.elevenlabs-header h2 {
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin-bottom: 8px;
-}
-
-.elevenlabs-actions {
+.listening-dots {
   display: flex;
-  gap: 12px;
+  gap: 4px;
+  align-items: center;
+  height: 20px;
+}
+
+.listening-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success);
+  animation: listening-bounce 1.4s ease-in-out infinite;
+}
+
+.listening-dots span:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.listening-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.listening-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes listening-bounce {
+  0%, 60%, 100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  30% {
+    transform: translateY(-8px);
+    opacity: 1;
+  }
+}
+
+/* Gemini Panel Styles */
+.gemini-panel {
+  max-width: 600px;
+}
+
+.gemini-question-box {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.question-box-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.question-box-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--gray-500);
+}
+
+.question-box-text {
+  font-size: 0.9375rem;
+  color: var(--gray-800);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.gemini-actions {
+  display: flex;
+  gap: 10px;
   justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn-retry-small {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: var(--white);
+  color: var(--gray-700);
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-retry-small:hover:not(:disabled) {
+  background: var(--gray-50);
+  border-color: var(--gray-400);
+}
+
+.btn-retry-small:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-retry-small svg {
+  width: 14px;
+  height: 14px;
 }
 
 .spinner {
@@ -1000,7 +1031,7 @@ body {
   .upload-card,
   .ready-card,
   .results-card,
-  .elevenlabs-card {
+  .elevenlabs-custom-card {
     grid-column: 1 / -1;
     max-width: 560px;
     justify-self: center;

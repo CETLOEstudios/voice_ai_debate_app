@@ -12,7 +12,6 @@ const wordToNumber = {
 };
 
 function parseSpokenNumber(text) {
-  // Handle "ninety-five", "ninety five", etc.
   const words = text.toLowerCase().replace(/-/g, ' ').split(/\s+/);
   let total = 0;
   let current = 0;
@@ -36,7 +35,6 @@ function parseSpokenNumber(text) {
 function extractScoreFromText(text) {
   if (!text) return null;
   
-  // First try to find digit-based scores
   const digitPatterns = [
     /integrity score is (\d{1,3})/i,
     /score is (\d{1,3})/i,
@@ -57,7 +55,6 @@ function extractScoreFromText(text) {
     }
   }
   
-  // Try to find spoken number scores like "ninety-five out of one hundred"
   const spokenPatterns = [
     /integrity score is ([a-z\-\s]+) out of/i,
     /score is ([a-z\-\s]+) out of/i,
@@ -100,14 +97,12 @@ export function ElevenLabsPanel({ assignmentText, fileName, onComplete, onRestar
     }
   }, [messages, currentTranscript]);
 
-  // Auto-complete after the review message (4th AI message: greeting + 3 questions + review = 5, but we count from greeting)
-  // Greeting (1) + Q1 (2) + Q2 (3) + Q3 (4) + Review (5)
+  // Auto-complete after the review message
   useEffect(() => {
     if (aiMessageCount >= 5 && !hasCompletedRef.current) {
       hasCompletedRef.current = true;
       setIsComplete(true);
       
-      // Try to extract score from the last AI message
       const lastAiMessage = messages.filter(m => m.role === "ai").pop();
       if (lastAiMessage) {
         const text = lastAiMessage.text;
@@ -120,7 +115,6 @@ export function ElevenLabsPanel({ assignmentText, fileName, onComplete, onRestar
         }
       }
       
-      // Auto-end conversation after a short delay
       setTimeout(() => {
         endConversation();
       }, 2000);
@@ -138,6 +132,7 @@ export function ElevenLabsPanel({ assignmentText, fileName, onComplete, onRestar
     setIsComplete(false);
     setExtractedScore(null);
     setAiMessageCount(0);
+    setCurrentTranscript("");
     
     try {
       setConversationState("connecting");
@@ -147,11 +142,10 @@ export function ElevenLabsPanel({ assignmentText, fileName, onComplete, onRestar
       await navigator.mediaDevices.getUserMedia({ audio: true });
       console.log("Microphone access granted");
       
-      setMessages([{ role: "system", text: "Connecting to AI coach..." }]);
+      setMessages([{ role: "system", text: "Connecting to AI..." }]);
 
       const { Conversation } = await import("@elevenlabs/client");
 
-      // Prepare assignment context - send FULL assignment
       const assignmentTitle = fileName ? fileName.replace(/\.[^/.]+$/, "") : "your assignment";
       const fullAssignment = assignmentText || "No assignment content provided.";
 
@@ -159,7 +153,6 @@ export function ElevenLabsPanel({ assignmentText, fileName, onComplete, onRestar
       console.log("Assignment title:", assignmentTitle);
       console.log("Full assignment length:", fullAssignment.length);
 
-      // Build the system prompt with FULL assignment context
       const systemPrompt = `You are an AI coach verifying a student understands their submitted assignment.
 
 ASSIGNMENT TITLE: ${assignmentTitle}
@@ -195,7 +188,6 @@ IMPORTANT:
       console.log("System prompt length:", systemPrompt.length);
       console.log("=== END DEBUG ===");
 
-      // Use overrides with camelCase as per docs
       const conversation = await Conversation.startSession({
         agentId: ELEVENLABS_AGENT_ID,
         overrides: {
@@ -210,7 +202,7 @@ IMPORTANT:
           console.log("Connected to ElevenLabs");
           setIsConnected(true);
           setConversationState("listening");
-          setMessages([{ role: "system", text: "Connected! The AI coach will greet you..." }]);
+          setMessages([{ role: "system", text: "Connected! The AI will greet you..." }]);
           isStartingRef.current = false;
         },
         onDisconnect: () => {
@@ -230,26 +222,58 @@ IMPORTANT:
           const mode = modeInfo?.mode || modeInfo;
           if (mode === "speaking") {
             setConversationState("speaking");
+            // Clear interim transcript when AI starts speaking
+            setCurrentTranscript("");
           } else if (mode === "listening") {
             setConversationState("listening");
           }
         },
         onMessage: (message) => {
-          console.log("Message:", message);
-          if (message) {
-            const text = message.message || message.text || message.content;
-            const source = message.source || message.role || "unknown";
+          console.log("Message received:", JSON.stringify(message, null, 2));
+          
+          if (!message) return;
+          
+          // Handle different message types from ElevenLabs
+          // The message object can have different structures
+          const messageType = message.type || message.message_type;
+          const source = message.source || message.role;
+          const text = message.message || message.text || message.content || message.transcript;
+          const isFinal = message.isFinal !== false; // Default to true if not specified
+          
+          console.log("Parsed - Type:", messageType, "Source:", source, "Text:", text, "IsFinal:", isFinal);
+          
+          // Handle user transcripts (interim and final)
+          if (source === "user" || source === "human" || messageType === "user_transcript" || messageType === "transcript") {
             if (text) {
-              if (source === "ai" || source === "agent" || source === "assistant") {
-                setMessages(prev => [...prev.filter(m => m.role !== "system"), { role: "ai", text }]);
-                setAiMessageCount(prev => {
-                  const newCount = prev + 1;
-                  console.log("AI message count:", newCount);
-                  return newCount;
-                });
-              } else if (source === "user" || source === "human") {
-                setMessages(prev => [...prev, { role: "user", text }]);
+              if (isFinal || messageType === "user_transcript") {
+                // Final transcript - add to messages
                 setCurrentTranscript("");
+                setMessages(prev => [...prev, { role: "user", text }]);
+              } else {
+                // Interim transcript - show as live
+                setCurrentTranscript(text);
+              }
+            }
+          }
+          // Handle AI messages
+          else if (source === "ai" || source === "agent" || source === "assistant" || messageType === "agent_response") {
+            if (text) {
+              setMessages(prev => [...prev.filter(m => m.role !== "system"), { role: "ai", text }]);
+              setAiMessageCount(prev => {
+                const newCount = prev + 1;
+                console.log("AI message count:", newCount);
+                return newCount;
+              });
+            }
+          }
+          // Handle audio transcript events specifically
+          else if (messageType === "audio_transcript" || messageType === "user_audio_transcript") {
+            if (text) {
+              if (isFinal) {
+                setCurrentTranscript("");
+                setMessages(prev => [...prev, { role: "user", text }]);
+              } else {
+                setCurrentTranscript(text);
               }
             }
           }
@@ -293,11 +317,9 @@ IMPORTANT:
   const handleFinish = useCallback(() => {
     endConversation();
     
-    // Extract review from messages
     const aiMessages = messages.filter(m => m.role === "ai");
     const reviewMessage = aiMessages[aiMessages.length - 1]?.text || "Review not available.";
     
-    // Try to extract score again if not already found
     let finalScore = extractedScore;
     if (!finalScore && reviewMessage) {
       finalScore = extractScoreFromText(reviewMessage);
@@ -335,12 +357,9 @@ IMPORTANT:
     return "idle";
   };
 
-  // Calculate question progress
   const getQuestionProgress = () => {
-    // AI messages: greeting (1), Q1 (2), Q2 (3), Q3 (4), Review (5)
-    // Greeting is message 1, then questions start from message 2
     if (aiMessageCount === 0) return "Ready";
-    if (aiMessageCount === 1) return "Greeting"; // This is the greeting, not Q1
+    if (aiMessageCount === 1) return "Greeting";
     if (aiMessageCount === 2) return "Question 1/3";
     if (aiMessageCount === 3) return "Question 2/3";
     if (aiMessageCount === 4) return "Question 3/3";
@@ -364,7 +383,7 @@ IMPORTANT:
       </div>
 
       <div className="elevenlabs-orb-section" onClick={handleOrbClick}>
-        <Orb state={isComplete ? "idle" : getOrbState()} size={180} />
+        <Orb state={isComplete ? "idle" : getOrbState()} />
         {conversationState === "idle" && !error && !isComplete && (
           <p className="orb-hint">Click to start conversation</p>
         )}
@@ -375,7 +394,7 @@ IMPORTANT:
           <p className="orb-hint">AI is speaking...</p>
         )}
         {conversationState === "listening" && (
-          <p className="orb-hint">Listening to you...</p>
+          <p className="orb-hint">Listening... speak now</p>
         )}
         {isComplete && (
           <p className="orb-hint success">Q&A Complete! Click "See Results" below.</p>
@@ -401,6 +420,9 @@ IMPORTANT:
       <div className="elevenlabs-transcript-section">
         <div className="transcript-header">
           <h3>Conversation</h3>
+          {conversationState === "listening" && currentTranscript && (
+            <span className="live-indicator">● Live</span>
+          )}
         </div>
         
         <div className="transcript-feed" ref={feedRef}>
@@ -413,7 +435,7 @@ IMPORTANT:
           {messages.map((msg, i) => (
             <div key={i} className={`transcript-message ${msg.role}`}>
               <span className="message-role">
-                {msg.role === "ai" ? "Coach" : msg.role === "user" ? "You" : "System"}
+                {msg.role === "ai" ? "AI" : msg.role === "user" ? "You" : "System"}
               </span>
               <p>{msg.text}</p>
             </div>
@@ -421,7 +443,7 @@ IMPORTANT:
           
           {currentTranscript && (
             <div className="transcript-message user live">
-              <span className="message-role">You (speaking)</span>
+              <span className="message-role">You (speaking...)</span>
               <p>{currentTranscript}</p>
             </div>
           )}

@@ -31,11 +31,22 @@ IMPORTANT:
 - Ask ONE question at a time
 
 AFTER 3 ANSWERS:
-Give a brief, encouraging review (2-3 sentences) and a score from 0-100 based on how well they demonstrated genuine understanding.
+Give a brief, encouraging review (2-3 sentences) and an ACCURATE integrity score.
+
+SCORING GUIDELINES (be precise, use ANY number from 30-100):
+- 95-100: Exceptional - Student clearly wrote this themselves, explains concepts fluently, provides details not in the text
+- 85-94: Strong - Good understanding, answers confidently with specific details
+- 75-84: Adequate - Understands main points but some hesitation or vagueness
+- 65-74: Marginal - Basic recall but struggles to explain or elaborate
+- 50-64: Weak - Limited understanding, generic or memorized-sounding answers
+- 30-49: Poor - Cannot demonstrate genuine understanding
+
+USE PRECISE SCORES like 97, 88, 73, 82, 91, 100 - NOT just multiples of 5!
+If a student demonstrates excellent understanding, give them 98, 99, or 100.
 
 RESPONSE FORMAT - ALWAYS use this exact JSON structure:
 For questions: {"type": "question", "number": 1, "text": "Your full question here"}
-For review: {"type": "review", "score": 75, "review": "Your review here.", "observations": ["point 1", "point 2"]}
+For review: {"type": "review", "score": 87, "review": "Your review here.", "observations": ["point 1", "point 2"]}
 
 CRITICAL: Always include the COMPLETE text in your response. Never truncate with "..." """
 
@@ -73,7 +84,13 @@ Return ONLY valid JSON, nothing else."""
             next_q = question_number + 1
             instruction = f"Now ask question {next_q}. Pick something different from what you already asked about. Reference a specific part of their assignment."
         else:
-            instruction = "The student has answered all three questions. Give a brief encouraging review (2-3 sentences) and a score from 0-100 based on how well they demonstrated understanding."
+            instruction = """The student has answered all three questions. Give a brief encouraging review (2-3 sentences) and an ACCURATE integrity score.
+
+Use a PRECISE score (like 97, 88, 73, 91, 100) - NOT just multiples of 5!
+- If they answered excellently with clear understanding, give 95-100
+- If they showed strong knowledge, give 85-94
+- If adequate but some gaps, give 75-84
+- Score lower only if they struggled significantly"""
 
         prompt = f"""{SYSTEM_PROMPT}
 
