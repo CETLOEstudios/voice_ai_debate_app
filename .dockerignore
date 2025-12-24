@@ -1,41 +1,27 @@
 # Git
-.git
+.git/
 .gitignore
 
+# Docs
+README.md
+*.md
+
 # Python
-__pycache__
+__pycache__/
 *.pyc
 *.pyo
-*.pyd
-.Python
-venv
-.venv
-*.egg-info
+.env
+backend/.env
+backend/venv/
+backend/__pycache__/
 
 # Node
-node_modules
-npm-debug.log
-
-# Build outputs
-dist
-build
+frontend/node_modules/
+frontend/dist/
 
 # IDE
-.vscode
-.idea
-*.swp
-*.swo
+.vscode/
+.idea/
 
-# Environment files (API keys should be provided at runtime)
-.env
-*.env
-
-# Docker
-Dockerfile
-docker-compose.yml
-.dockerignore
-
-# Documentation
-*.md
-LICENSE
-
+# Logs
+*.log

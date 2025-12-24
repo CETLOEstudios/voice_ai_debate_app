@@ -64,7 +64,7 @@ export default function App() {
       setAssignmentText(data.assignment_text || "");
       
       if (selectedModel === "gemini") {
-        setQuestionNumber(data.question_number || 1);
+      setQuestionNumber(data.question_number || 1);
         setPendingAudio(data.audio_base64);
         setPendingGreeting(data.text);
         setCurrentQuestion(data.text);
@@ -258,8 +258,8 @@ export default function App() {
 
           {step === "results" && analysis && (
             <ResultsPanel analysis={analysis} onRestart={handleRestart} />
-          )}
-        </div>
+            )}
+          </div>
       </main>
     </div>
   );
